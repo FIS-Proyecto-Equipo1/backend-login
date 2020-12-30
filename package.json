@@ -1,0 +1,23 @@
+{
+  "name": "backend-login",
+  "version": "1.0.0",
+  "description": "Project for the backend side of the login microservice",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FIS-Proyecto-Equipo1/backend-login.git"
+  },
+  "author": "Roberto Serrano y Juan Luis Montes",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/FIS-Proyecto-Equipo1/backend-login/issues"
+  },
+  "homepage": "https://github.com/FIS-Proyecto-Equipo1/backend-login#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1"
+  }
+}
