@@ -1,7 +1,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 
-var port = 4000;
+var port = (process.env.PORT || 4000);
 var BASE_API_PATH = "/api/v1"
 
 console.log("Starting Auth service...")
