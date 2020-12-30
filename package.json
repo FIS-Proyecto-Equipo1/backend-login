@@ -4,7 +4,7 @@
   "description": "Project for the backend side of the login microservice",
   "main": "index.js",
   "scripts": {
-    "start": "index.js"
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
