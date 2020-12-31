@@ -1,7 +1,7 @@
 sudo: required
 language: node_js
 node_js:
-  - "9"
+  - "11.0.0"
 services:
   - docker
   - mongodb
