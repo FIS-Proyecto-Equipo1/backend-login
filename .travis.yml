@@ -1,16 +1,17 @@
 sudo: required
 language: node_js
 node_js:
-- "9"
+  - "9"
 services:
-- docker
+  - docker
+  - mongodb
 before_install:
-- wget -q0- https://toolbelt.heroku.com/install.sh | sh
+  - wget -qO- https://toolbelt.heroku.com/install.sh | sh
 install:
-- npm install
+  - npm install
 script:
-- docker build -t backend-login . 
-deploy: 
+  - docker build -t backend-login .
+deploy:
   provider: script
   skip_cleanup: true
   script:
