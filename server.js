@@ -1,6 +1,6 @@
 var express = require('express');
 var bodyParser = require('body-parser');
-const User = require('./login.js');
+const User = require('./login');
 
 var BASE_API_PATH = "/api/v1"
 
