@@ -3,7 +3,7 @@ var bodyParser = require('body-parser');
 var jwt = require('jsonwebtoken');
 const User = require('./login');
 
-var BASE_API_PATH = "/api/v1";
+var BASE_API_PATH = "/auth/api/v1"
 
 console.log("Starting Auth service...");
 
@@ -21,23 +21,23 @@ app.use(function(req, res, next) {
 
 //** Eliminar cuando se haga con conexión a la bbdd  - INICIO */
 var users = [
-    {"username": "myuser", "password": "mypass", "name": "Roberto Serrano"}
+    {"userId": 1, "email":"robsergue@gmail.com", "password": "mypass", "nombre": "Roberto", "apellidos": "Serrano", "telefono":"655656565", "cuentaBancaria":"ES91 2100 0418 4502 0005 1332"}
 ]
 
 const loginUser = function(username, password){
     var foundUser;
     users.forEach( _user => {
-        if( _user.username === username && _user.password === password){
+        if( _user.email === username && _user.password === password){
             foundUser = _user
         }
     });
     return foundUser
 };
 
-const retrieveUser = function(username){
+const retrieveUser = function(userId){
     var foundUser;
     users.forEach( _user => {
-        if( _user.username === username){
+        if( _user.userId === userId){
             foundUser = _user
         }
     });
@@ -52,20 +52,20 @@ app.get("/", (req, res) => {
     res.send("<html><body><h1>Login OK</h1></body></html>")
 });
 
-app.get(BASE_API_PATH + "/user", (req, res) => {
-    console.log(Date() + " - GET /user");
-    User.find({}, (err, users) => {
-        if (err) {
-            console.log(Date() + " - " + err);
-            res.sendStatus(500);
-        }
-        else {
-            res.send(users.map((user) => {
-                return users.cleanup();
-            }));
-        }
-    });
-});
+// app.get(BASE_API_PATH + "/user", (req, res) => {
+//     console.log(Date() + " - GET /user");
+//     User.find({}, (err, users) => {
+//         if (err) {
+//             console.log(Date() + " - " + err);
+//             res.sendStatus(500);
+//         }
+//         else {
+//             res.send(users.map((user) => {
+//                 return users.cleanup();
+//             }));
+//         }
+//     });
+// });
 
 app.post(BASE_API_PATH + "/user", (req, res) => {
     console.log(Date() + " - POST /user");
@@ -82,16 +82,35 @@ app.post(BASE_API_PATH + "/user", (req, res) => {
 });
 
 app.post(BASE_API_PATH + "/login", (req, res) => {
+    console.log("Login post request")
     userVM = req.body;
     var foundUser = loginUser(userVM.username, userVM.password);
 
     if(foundUser){
-        var token = jwt.sign({ 'username': foundUser.username }, tokenSignKey);
+        var token = jwt.sign({ 'userId': foundUser.userId }, tokenSignKey);
         res.send("{'token': '"+token+"'}");
     }else{
         res.sendStatus(400).send("{'error':'No existe'}");
     }
     
+});
+
+app.get(BASE_API_PATH + "/login", (req, res) => {
+    console.log("Login request")
+    _auth = req.header('Authentication')
+    try {
+        var decoded = jwt.verify(_auth, tokenSignKey);
+    } catch(err) {
+        res.send(401,"{'error':'Not valid'}")
+        return
+    }
+    console.log(decoded)
+    var foundUser = retrieveUser(decoded.userId);
+    if(foundUser){
+        res.send(foundUser);
+        return
+    }
+    res.send(401,"{'error':'Not found'}")
 });
 
 app.get(BASE_API_PATH + "/logged-user", (req, res) => {
@@ -103,7 +122,44 @@ app.get(BASE_API_PATH + "/logged-user", (req, res) => {
         return
     }
     console.log(decoded)
-    var foundUser = retrieveUser(decoded.username);
+    var foundUser = retrieveUser(decoded.userId);
+    if(foundUser){
+        res.send(foundUser);
+        return
+    }
+    res.send(401,"{'error':'Not found'}")
+});
+
+app.get(BASE_API_PATH + "/user", (req, res) => {
+    console.log("Logged user request")
+    _auth = req.header('Authentication')
+    try {
+        var decoded = jwt.verify(_auth, tokenSignKey);
+    } catch(err) {
+        res.send(401,"{'error':'Not valid'}")
+        return
+    }
+    console.log(decoded)
+    var foundUser = retrieveUser(decoded.userId);
+    if(foundUser){
+        res.send(foundUser);
+        return
+    }
+    res.send(401,"{'error':'Not found'}")
+});
+
+
+app.get(BASE_API_PATH + "/user/1", (req, res) => {
+    console.log("Logged user request")
+    _auth = req.header('Authentication')
+    try {
+        var decoded = jwt.verify(_auth, tokenSignKey);
+    } catch(err) {
+        res.send(401,"{'error':'Not valid'}")
+        return
+    }
+    console.log(decoded)
+    var foundUser = retrieveUser(decoded.userId);
     if(foundUser){
         res.send(foundUser);
         return
