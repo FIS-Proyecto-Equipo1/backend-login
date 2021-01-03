@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
-const DB_URL = (process.env.MONGO_URL || 'mongodb://localhost/test');
+
+const uri = "mongodb+srv://juamoncal:fisequipo1@cluster0.9d47d.mongodb.net/login?retryWrites=true&w=majority";
+const DB_URL = (process.env.MONGO_URL || uri);
 const dbConnect = function() {
     const db = mongoose.connection;
     db.on('error', console.error.bind(console, 'connection error: '));
