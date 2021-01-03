@@ -13,4 +13,4 @@ dbConnect().then(
     err => {
         console.log("Connection error: " +err);
     }
-)
+);
