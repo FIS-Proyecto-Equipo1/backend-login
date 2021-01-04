@@ -96,26 +96,8 @@ app.post(BASE_API_PATH + "/login", (req, res) => {
     
 });
 
-app.get(BASE_API_PATH + "/login", (req, res) => {
-    console.log("Login request")
-    _auth = req.header('Authentication')
-    try {
-        var decoded = jwt.verify(_auth, tokenSignKey);
-    } catch(err) {
-        res.send(401,"{'error':'Not valid'}")
-        return
-    }
-    console.log(decoded)
-    var foundUser = retrieveUser(decoded.userId);
-    if(foundUser){
-        res.send(foundUser);
-        return
-    }
-    res.send(401,"{'error':'Not found'}")
-});
-
 app.get(BASE_API_PATH + "/logged-user", (req, res) => {
-    _auth = req.header('Authentication')
+    _auth = req.header('Authorization')
     try {
         var decoded = jwt.verify(_auth, tokenSignKey);
     } catch(err) {
@@ -133,11 +115,12 @@ app.get(BASE_API_PATH + "/logged-user", (req, res) => {
 
 app.get(BASE_API_PATH + "/user", (req, res) => {
     console.log("Logged user request")
-    _auth = req.header('Authentication')
+    var token = req.headers.authorization.split(" ")[1];
     try {
-        var decoded = jwt.verify(_auth, tokenSignKey);
+        var decoded = jwt.verify(token, tokenSignKey);
     } catch(err) {
-        res.send(401,"{'error':'Not valid'}")
+        console.log(err)
+        res.status(401).send("{'error':'Not valid'}")
         return
     }
     console.log(decoded)
@@ -152,11 +135,12 @@ app.get(BASE_API_PATH + "/user", (req, res) => {
 
 app.get(BASE_API_PATH + "/user/1", (req, res) => {
     console.log("Logged user request")
-    _auth = req.header('Authentication')
+    var token = req.headers.authorization.split(" ")[1];
     try {
-        var decoded = jwt.verify(_auth, tokenSignKey);
+        var decoded = jwt.verify(token, tokenSignKey);
     } catch(err) {
-        res.send(401,"{'error':'Not valid'}")
+        console.log(err)
+        res.status(401).send("{'error':'Not valid'}")
         return
     }
     console.log(decoded)
