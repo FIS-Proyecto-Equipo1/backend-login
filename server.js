@@ -3,7 +3,7 @@ var bodyParser = require('body-parser');
 var jwt = require('jsonwebtoken');
 const User = require('./login');
 
-var BASE_API_PATH = "/auth/api/v1"
+var BASE_API_PATH = "/api/v1"
 
 console.log("Starting Auth service...");
 
@@ -21,7 +21,8 @@ app.use(function(req, res, next) {
 
 //** Eliminar cuando se haga con conexión a la bbdd  - INICIO */
 var users = [
-    {"userId": 1, "email":"robsergue@gmail.com", "password": "mypass", "nombre": "Roberto", "apellidos": "Serrano", "telefono":"655656565", "cuentaBancaria":"ES91 2100 0418 4502 0005 1332"}
+    {"userId": 1, "email":"admin@gmail.com", "rol":"USER", "password": "mypass", "nombre": "Roberto", "apellidos": "Serrano", "telefono":"655656565", "cuentaBancaria":"ES91 2100 0418 4502 0005 1332"},
+    {"userId": 2, "email":"user@gmail.com", "rol":"ADMIN", "password": "mypass", "nombre": "Juan Luis", "apellidos": "Montes", "telefono":"668858585", "cuentaBancaria":"ES91 2100 0418 4502 0005 1332"}
 ]
 
 const loginUser = function(username, password){
@@ -87,7 +88,7 @@ app.post(BASE_API_PATH + "/login", (req, res) => {
     var foundUser = loginUser(userVM.username, userVM.password);
 
     if(foundUser){
-        var token = jwt.sign({ 'userId': foundUser.userId }, tokenSignKey);
+        var token = jwt.sign({ 'userId': foundUser.userId, 'role': foundUser.rol }, tokenSignKey);
         res.send("{'token': '"+token+"'}");
     }else{
         res.sendStatus(400).send("{'error':'No existe'}");
