@@ -21,8 +21,8 @@ app.use(function(req, res, next) {
 
 //** Eliminar cuando se haga con conexión a la bbdd  - INICIO */
 var users = [
-    {"userId": 1, "email":"admin@gmail.com", "rol":"USER", "password": "mypass", "nombre": "Roberto", "apellidos": "Serrano", "telefono":"655656565", "cuentaBancaria":"ES91 2100 0418 4502 0005 1332"},
-    {"userId": 2, "email":"user@gmail.com", "rol":"ADMIN", "password": "mypass", "nombre": "Juan Luis", "apellidos": "Montes", "telefono":"668858585", "cuentaBancaria":"ES91 2100 0418 4502 0005 1332"}
+    {"userId": 1, "email":"admin@gmail.com", "rol":"ADMIN", "password": "mypass", "nombre": "Roberto", "apellidos": "Serrano", "telefono":"655656565", "cuentaBancaria":"ES91 2100 0418 4502 0005 1332"},
+    {"userId": 2, "email":"user@gmail.com", "rol":"USER", "password": "mypass", "nombre": "Juan Luis", "apellidos": "Montes", "telefono":"668858585", "cuentaBancaria":"ES91 2100 0418 4502 0005 1332"}
 ]
 
 const loginUser = function(username, password){
@@ -89,9 +89,10 @@ app.post(BASE_API_PATH + "/login", (req, res) => {
 
     if(foundUser){
         var token = jwt.sign({ 'userId': foundUser.userId, 'role': foundUser.rol }, tokenSignKey);
-        res.send("{'token': '"+token+"'}");
+        var result = { "token": token, "rol": foundUser.rol}
+        res.send(result);
     }else{
-        res.sendStatus(400).send("{'error':'No existe'}");
+        res.status(400).send("{'error':'No existe'}");
     }
     
 });
