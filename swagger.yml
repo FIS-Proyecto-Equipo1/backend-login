@@ -39,7 +39,7 @@ paths:
         "200":
           description: "Operación satisfactoria"
           schema:
-            type: "string"
+            $ref: "#/definitions/LoginResponse"
           headers:
             X-Rate-Limit:
               type: "integer"
@@ -129,6 +129,13 @@ definitions:
       username:
         type: "string"
       password:
+        type: "string"
+  LoginResponse:
+    type: "object"
+    properties:
+      token:
+        type: "string"
+      rol:
         type: "string"
   User:
     type: "object"
