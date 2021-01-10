@@ -1,7 +1,9 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var jwt = require('jsonwebtoken');
-const User = require('./login');
+const bcrypt = require('bcrypt');
+
+const Usuarios = require('./login');
 
 var BASE_API_PATH = "/api/v1"
 
@@ -19,59 +21,19 @@ app.use(function(req, res, next) {
 
   var tokenSignKey = (process.env.SIGN_KEY || '669B523BBC1157221D3AAA35E8398');
 
-//** Eliminar cuando se haga con conexión a la bbdd  - INICIO */
-var users = [
-    {"userId": 1, "email":"admin@gmail.com", "rol":"ADMIN", "password": "mypass", "nombre": "Roberto", "apellidos": "Serrano", "telefono":"655656565", "cuentaBancaria":"ES91 2100 0418 4502 0005 1332"},
-    {"userId": 2, "email":"user@gmail.com", "rol":"USER", "password": "mypass", "nombre": "Juan Luis", "apellidos": "Montes", "telefono":"668858585", "cuentaBancaria":"ES91 2100 0418 4502 0005 1332"}
-]
-
-const loginUser = function(username, password){
-    var foundUser;
-    users.forEach( _user => {
-        if( _user.email === username && _user.password === password){
-            foundUser = _user
-        }
-    });
-    return foundUser
-};
-
-const retrieveUser = function(userId){
-    var foundUser;
-    users.forEach( _user => {
-        if( _user.userId === userId){
-            foundUser = _user
-        }
-    });
-    return foundUser
-};
-
-//** Eliminar cuando se haga con conexión a la bbdd  - FIN */
-
 
 
 app.get("/", (req, res) => {
     res.send("<html><body><h1>Login OK</h1></body></html>")
 });
 
-// app.get(BASE_API_PATH + "/user", (req, res) => {
-//     console.log(Date() + " - GET /user");
-//     User.find({}, (err, users) => {
-//         if (err) {
-//             console.log(Date() + " - " + err);
-//             res.sendStatus(500);
-//         }
-//         else {
-//             res.send(users.map((user) => {
-//                 return users.cleanup();
-//             }));
-//         }
-//     });
-// });
 
 app.post(BASE_API_PATH + "/user", (req, res) => {
-    console.log(Date() + " - POST /user");
-    var contact = req.body;
-    User.create(contact, (err) => {
+    console.log(Date() + " - POST Create user");
+    var nuevoUsuario = req.body;
+    generatedSalt = bcrypt.genSaltSync(10);
+    nuevoUsuario.password = bcrypt.hashSync(nuevoUsuario.password, generatedSalt)
+    Usuarios.create(nuevoUsuario, (err) => {
         if (err) {
             console.log(Date() + " - " + err);
             res.sendStatus(500) // error 500. error interno
@@ -83,74 +45,171 @@ app.post(BASE_API_PATH + "/user", (req, res) => {
 });
 
 app.post(BASE_API_PATH + "/login", (req, res) => {
-    console.log("Login post request")
-    userVM = req.body;
-    var foundUser = loginUser(userVM.username, userVM.password);
+    console.log(Date() + " - POST Login request")
+    username = req.body.username;
+    password = req.body.password;
 
-    if(foundUser){
-        var token = jwt.sign({ 'userId': foundUser.userId, 'role': foundUser.rol }, tokenSignKey);
-        var result = { "token": token, "rol": foundUser.rol}
-        res.send(result);
-    }else{
-        res.status(400).send("{'error':'No existe'}");
-    }
+    Usuarios.findOne({ email: username }, (erro, usuarioDB)=>{
+        if (erro) {
+          return res.status(500).json({
+             err: erro
+          })
+       }
+    // Verifica que exista un usuario con el mail escrita por el usuario.
+      if (!usuarioDB) {
+         return res.status(400).json({
+           err: {
+               message: "Usuario o contraseña incorrectos"
+           }
+        })
+      }
+    // Valida que la contraseña escrita por el usuario, sea la almacenada en la db
+      if (! bcrypt.compareSync(password, usuarioDB.password)){
+         return res.status(400).json({
+            err: {
+              message: "Usuario o contraseña incorrectos"
+            }
+         });
+      }
+
+      var token = jwt.sign({ 'userId': usuarioDB._id, 'role': usuarioDB.rol }, tokenSignKey);
+      var result = { "token": token, "rol": usuarioDB.rol}
+      res.send(result);
+    });
+
     
 });
 
-app.get(BASE_API_PATH + "/logged-user", (req, res) => {
-    _auth = req.header('Authorization')
+
+app.get(BASE_API_PATH + "/login", (req, res) => {
+    console.log(Date() + " - GET Logged user")
+    var token = req.headers.authorization.split(" ")[1];
     try {
-        var decoded = jwt.verify(_auth, tokenSignKey);
+        var decoded = jwt.verify(token, tokenSignKey);
     } catch(err) {
-        res.send(401,"{'error':'Not valid'}")
+        console.log(err)
+        res.status(401).send("{'error':'Not valid'}")
         return
     }
     console.log(decoded)
-    var foundUser = retrieveUser(decoded.userId);
-    if(foundUser){
-        res.send(foundUser);
-        return
+    Usuarios.findOne({ _id: decoded.userId }, (erro, usuarioDB)=>{
+        if (erro) {
+          return res.status(500).json({
+             err: erro
+          })
+       }
+
+       if(usuarioDB){
+            return res.send(usuarioDB);
+       }else{
+        return res.status(401).send("{'error':'Not found'}")
+       }
+
+
     }
-    res.send(401,"{'error':'Not found'}")
+    );
 });
+
+
+
+
 
 app.get(BASE_API_PATH + "/user", (req, res) => {
-    console.log("Logged user request")
+    console.log(Date() + " - GET All users")
     var token = req.headers.authorization.split(" ")[1];
-    try {
-        var decoded = jwt.verify(token, tokenSignKey);
-    } catch(err) {
-        console.log(err)
-        res.status(401).send("{'error':'Not valid'}")
-        return
+    let loggedUserRole = req.header("x-rol")
+
+    if(loggedUserRole != "ADMIN"){
+        return res.status(403).send("{'error':'Unathorized'}")
     }
-    console.log(decoded)
-    var foundUser = retrieveUser(decoded.userId);
-    if(foundUser){
-        res.send(foundUser);
-        return
+    Usuarios.find( (erro, usuariosDB)=>{
+        if (erro) {
+          return res.status(500).json({
+             err: erro
+          })
+       }
+
+       if(usuariosDB){
+            return res.send(usuariosDB);
+       }else{
+        return res.status(401).send("{'error':'Not found'}")
+       }
+
+
     }
-    res.send(401,"{'error':'Not found'}")
+    );
 });
 
 
-app.get(BASE_API_PATH + "/user/1", (req, res) => {
-    console.log("Logged user request")
-    var token = req.headers.authorization.split(" ")[1];
-    try {
-        var decoded = jwt.verify(token, tokenSignKey);
-    } catch(err) {
-        console.log(err)
-        res.status(401).send("{'error':'Not valid'}")
-        return
+app.put(BASE_API_PATH + "/user/:id_user", (req, res) => {
+    let userId = req.params.id_user;
+    console.log(Date() + " - PUT Update user " + userId)
+    
+
+    let loggedUserId = req.header("x-user")
+    let loggedUserRole = req.header("x-rol")
+
+    if(!loggedUserRole || !loggedUserRole){
+        return res.status(403).send("{'error':'Unauthorized'}")
     }
-    console.log(decoded)
-    var foundUser = retrieveUser(decoded.userId);
-    if(foundUser){
-        res.send(foundUser);
-        return
+
+    if(loggedUserRole != "ADMIN" && loggedUserId != userId){
+        return res.status(401).send("{'error':'Unauthorized'}")
     }
-    res.send(401,"{'error':'Not found'}")
+
+    let usuarioActualizado = req.body
+    delete usuarioActualizado.userId
+
+    if(loggedUserRole != "ADMIN"){
+        delete usuarioActualizado.rol
+    }
+
+    Usuarios.findOneAndUpdate({_id: userId}, usuarioActualizado, (erro, usuarioDB)=>{
+
+        if (erro) {
+            return res.status(500).json({
+               err: erro
+            })
+         }else{
+            return res.send(usuarioDB);
+         }
+    }
+
+    );
+});
+
+
+
+
+
+app.get(BASE_API_PATH + "/user/:id_user", (req, res) => {
+    let userId = req.params.id_user;
+    
+    console.log(Date() + " - Get User :" + userId)
+
+    let loggedUserId = req.header("x-user")
+    let loggedUserRole = req.header("x-rol")
+
+    if(loggedUserRole && loggedUserRole != "ADMIN" && loggedUserId && loggedUserId != userId){
+        return res.status(401).send("{'error':'Not found a'}")
+    }
+    
+    Usuarios.findOne({ _id: userId }, (erro, usuarioDB)=>{
+        if (erro) {
+          return res.status(500).json({
+             err: erro
+          })
+       }
+
+       if(usuarioDB){
+            return res.send(usuarioDB);
+       }else{
+        return res.status(401).send("{'error':'Not found'}")
+       }
+
+
+    }
+    );
 });
 
 module.exports = app;
