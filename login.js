@@ -16,6 +16,7 @@ const usuarioSchema = new mongoose.Schema({
     apellidos: { type: String, required: [true, "Los apellidos son necesarios"] },
     telefono: { type: String, required: false },
     cuentaBancaria: { type: String, required: [true, "La cuenta bancaria es necesaria"] },
+    permiso: { type: String},
 });
 
 
