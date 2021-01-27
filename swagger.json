@@ -9,7 +9,7 @@
       "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
     }
   },
-  "host": "localhost:4000",
+  "host": "urbanio-autenticacion.herokuapp.com",
   "basePath": "/api/v1",
   "tags": [
     {
@@ -22,7 +22,7 @@
     }
   ],
   "schemes": [
-    "http"
+    "https"
   ],
   "paths": {
     "/login": {
