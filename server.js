@@ -2,6 +2,8 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger.json');
 
 const Usuarios = require('./login');
 
@@ -11,6 +13,7 @@ console.log("Starting Auth service...");
 
 var app = express();
 app.use(bodyParser.json())
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
@@ -116,7 +119,7 @@ app.get(BASE_API_PATH + "/login", (req, res) => {
 
 app.get(BASE_API_PATH + "/user", (req, res) => {
     console.log(Date() + " - GET All users")
-    var token = req.headers.authorization.split(" ")[1];
+    // var token = req.headers.authorization.split(" ")[1];
     let loggedUserRole = req.header("x-rol")
 
     if(loggedUserRole != "ADMIN"){
